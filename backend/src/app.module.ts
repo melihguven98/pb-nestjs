@@ -1,8 +1,40 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { JwtModule } from '@nestjs/jwt';
+
+// Config
+import { getDatabaseConfig } from './config/database.config';
+import { getJwtConfig } from './config/jwt.config';
+
+// Domain Entities
+import {
+  User,
+  Project,
+  Candidate,
+  Task,
+  Question,
+  Reply,
+} from './domain/entities';
+
+// Infrastructure
+import {
+  ProjectRepository,
+  CandidateRepository,
+} from './infrastructure/database/repositories';
+import {
+  MailService,
+} from './infrastructure/external';
+
+// Application Services
+import { CandidateService } from './application/services';
+
+// Presentation
+import { CandidateController } from './presentation/controllers';
+
+// Legacy controllers (to be removed)
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -11,20 +43,40 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_DATABASE'),
-        entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-        synchronize: true, // Geliştirme ortamı için true, production'da false olmalı
-      }),
+      useFactory: getDatabaseConfig,
+      inject: [ConfigService],
+    }),
+    TypeOrmModule.forFeature([User, Project, Candidate, Task, Question, Reply]),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: getJwtConfig,
       inject: [ConfigService],
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [
+    // Legacy controller (to be removed)
+    AppController,
+    // Clean Architecture controllers
+    CandidateController,
+  ],
+  providers: [
+    // Legacy service (to be removed)
+    AppService,
+    // Clean Architecture services
+    CandidateService,
+    // Repository providers with interface binding
+    {
+      provide: 'ICandidateRepository',
+      useClass: CandidateRepository,
+    },
+    {
+      provide: 'IProjectRepository',
+      useClass: ProjectRepository,
+    },
+    {
+      provide: 'IMailService',
+      useClass: MailService,
+    },
+  ],
 })
 export class AppModule {}
