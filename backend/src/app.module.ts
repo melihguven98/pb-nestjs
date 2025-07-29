@@ -21,16 +21,19 @@ import {
 import {
   ProjectRepository,
   CandidateRepository,
+  UserRepository,
 } from './infrastructure/database/repositories';
 import {
   MailService,
+  AuthService,
 } from './infrastructure/external';
 
 // Application Services
 import { CandidateService } from './application/services';
+import { ProjectUseCases, AuthUseCases } from './application/use-cases';
 
 // Presentation
-import { CandidateController } from './presentation/controllers';
+import { CandidateController, ProjectController, AuthController } from './presentation/controllers';
 
 // Legacy controllers (to be removed)
 import { AppController } from './app.controller';
@@ -58,12 +61,16 @@ import { AppService } from './app.service';
     AppController,
     // Clean Architecture controllers
     CandidateController,
+    ProjectController,
+    AuthController,
   ],
   providers: [
     // Legacy service (to be removed)
     AppService,
     // Clean Architecture services
     CandidateService,
+    ProjectUseCases,
+    AuthUseCases,
     // Repository providers with interface binding
     {
       provide: 'ICandidateRepository',
@@ -74,8 +81,16 @@ import { AppService } from './app.service';
       useClass: ProjectRepository,
     },
     {
+      provide: 'IUserRepository',
+      useClass: UserRepository,
+    },
+    {
       provide: 'IMailService',
       useClass: MailService,
+    },
+    {
+      provide: 'IAuthService',
+      useClass: AuthService,
     },
   ],
 })

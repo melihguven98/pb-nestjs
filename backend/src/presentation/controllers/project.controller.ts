@@ -8,34 +8,27 @@ import {
   Param,
   UseGuards,
   Request,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ProjectUseCases } from '../../application/use-cases';
 import { CreateProjectDto, UpdateProjectDto } from '../dtos';
+import { ResponseInterceptor } from '../interceptors';
 
 // TODO: Import and use JwtAuthGuard when implemented
 // @UseGuards(JwtAuthGuard)
 @Controller('projects')
+@UseInterceptors(ResponseInterceptor)
 export class ProjectController {
   constructor(private readonly projectUseCases: ProjectUseCases) {}
 
   @Get()
   async getAllProjects() {
-    const projects = await this.projectUseCases.getAllProjects();
-
-    return {
-      success: true,
-      data: projects,
-    };
+    return await this.projectUseCases.getAllProjects();
   }
 
   @Get(':id')
   async getProjectById(@Param('id') id: string) {
-    const project = await this.projectUseCases.getProjectById(id);
-
-    return {
-      success: true,
-      data: project,
-    };
+    return await this.projectUseCases.getProjectById(id);
   }
 
   @Post()
@@ -46,19 +39,13 @@ export class ProjectController {
     // TODO: Get user ID from JWT token when auth is implemented
     const ownerId = 'temp-user-id'; // Placeholder
 
-    const project = await this.projectUseCases.createProject({
+    return await this.projectUseCases.createProject({
       ...createProjectDto,
       ownerId,
       deadline: createProjectDto.deadline
         ? new Date(createProjectDto.deadline)
         : undefined,
     });
-
-    return {
-      success: true,
-      data: project,
-      message: 'Project created successfully',
-    };
   }
 
   @Put(':id')
@@ -73,32 +60,17 @@ export class ProjectController {
         : undefined,
     };
 
-    const project = await this.projectUseCases.updateProject(id, updateData);
-
-    return {
-      success: true,
-      data: project,
-      message: 'Project updated successfully',
-    };
+    return await this.projectUseCases.updateProject(id, updateData);
   }
 
   @Delete(':id')
   async deleteProject(@Param('id') id: string) {
     await this.projectUseCases.deleteProject(id);
-
-    return {
-      success: true,
-      message: 'Project deleted successfully',
-    };
+    return { message: 'Project deleted successfully' };
   }
 
   @Get('owner/:ownerId')
   async getProjectsByOwner(@Param('ownerId') ownerId: string) {
-    const projects = await this.projectUseCases.getProjectsByOwner(ownerId);
-
-    return {
-      success: true,
-      data: projects,
-    };
+    return await this.projectUseCases.getProjectsByOwner(ownerId);
   }
 }

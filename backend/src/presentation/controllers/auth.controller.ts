@@ -1,8 +1,10 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, UseInterceptors } from '@nestjs/common';
 import { AuthUseCases } from '../../application/use-cases';
 import { LoginDto, CreateUserDto, UserResponseDto } from '../dtos';
+import { ResponseInterceptor } from '../interceptors';
 
 @Controller('auth')
+@UseInterceptors(ResponseInterceptor)
 export class AuthController {
   constructor(private readonly authUseCases: AuthUseCases) {}
 
@@ -15,16 +17,13 @@ export class AuthController {
     );
 
     return {
-      success: true,
-      data: {
-        token: result.token,
-        user: {
-          id: result.user.id,
-          email: result.user.email,
-          firstName: result.user.firstName,
-          lastName: result.user.lastName,
-          role: result.user.role,
-        },
+      token: result.token,
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        firstName: result.user.firstName,
+        lastName: result.user.lastName,
+        role: result.user.role,
       },
     };
   }
@@ -34,14 +33,11 @@ export class AuthController {
     const user = await this.authUseCases.register(createUserDto);
 
     return {
-      success: true,
-      data: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-      },
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
       message: 'User registered successfully',
     };
   }

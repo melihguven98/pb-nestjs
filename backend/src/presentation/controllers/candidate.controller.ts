@@ -7,12 +7,15 @@ import {
   Query,
   HttpStatus,
   HttpCode,
+  UseInterceptors,
 } from '@nestjs/common';
 import { CandidateService } from '../../application/services/candidate.service';
 import { CreateCandidateDto } from '../dtos/candidate.dto';
 import { CandidateStatus } from '../../domain/entities';
+import { ResponseInterceptor } from '../interceptors';
 
 @Controller('candidates')
+@UseInterceptors(ResponseInterceptor)
 export class CandidateController {
   constructor(private readonly candidateService: CandidateService) {}
 
